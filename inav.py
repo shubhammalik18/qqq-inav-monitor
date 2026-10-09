@@ -60,7 +60,7 @@ def fetch_holdings(ticker: str) -> tuple[date, pd.DataFrame]:
             continue
         rows.append({
             "ticker": h.get("ticker") or code,
-            "name": html.unescape(h.get("issuerName") or ""),
+            "name": html.unescape(h.get("issuerName") or ""),  # feed has "CASH &amp; EQUIVALENTS"
             "kind": kind,
             "units": float(h.get("units") or 0),
             "weight_pct": float(h.get("percentageOfTotalNetAssets") or 0),
@@ -76,7 +76,7 @@ def fetch_closes(tickers: list[str], start: date, end: date) -> pd.DataFrame:
 
     Yahoo sometimes drops a ticker from a bulk request, so missing ones are retried on their own.
     """
-    yahoo = {t: t.replace(".", "-") for t in tickers}
+    yahoo = {t: t.replace(".", "-") for t in tickers}  # BRK.B -> BRK-B
 
     def download(symbols: list[str]) -> pd.DataFrame:
         data = yf.download(symbols, start=start.isoformat(), end=(end + timedelta(days=1)).isoformat(),
@@ -95,20 +95,25 @@ def fetch_closes(tickers: list[str], start: date, end: date) -> pd.DataFrame:
 
     closes.index = pd.to_datetime(closes.index).date
     closes = closes.rename(columns={y: t for t, y in yahoo.items()}).reindex(columns=tickers)
-    return closes.dropna(how="all")
+    return closes.dropna(how="all")  # drop non-trading days
 
 
 def fetch_nav(ticker: str) -> float | None:
     """The issuer's official NAV as reported by Yahoo (not dated, see date_nav)."""
     try:
         return yf.Ticker(ticker).info.get("navPrice")
-    except Exception as exc:
+    except Exception as exc:  # yfinance raises many different errors
         log.warning("Could not get NAV from Yahoo: %s", exc)
         return None
 
 
 def date_nav(nav: float | None, etf_closes: pd.Series) -> date | None:
-    """Work out which day Yahoo's NAV belongs to."""
+    """Work out which day Yahoo's NAV belongs to.
+
+    Yahoo doesn't date it, and different Yahoo servers have returned NAVs one or two
+    days old. ETFs close within a few bp of NAV while daily moves are ~100 bp, so the
+    NAV is matched to the recent close it is clearly nearest to.
+    """
     if not nav:
         return None
     gaps = ((nav / etf_closes.dropna().iloc[-5:] - 1) * 1e4).abs().sort_values()
@@ -125,10 +130,15 @@ def run(method: str, days: int | None = None) -> None:
 
     start = date.today() - timedelta(days=int((days or 5) * 1.6) + 10)
     closes = fetch_closes(list(equities.index) + [TICKER], min(start, as_of - timedelta(days=10)), date.today())
-    filled = closes.ffill()
+    filled = closes.ffill()  # a missing price carries the last one forward (flagged below)
     nav = fetch_nav(TICKER)
+
+    # Value of the whole fund each day: sum of units x close, plus cash
     fund_value = (filled[equities.index] * equities["units"]).sum(axis=1) + cash
 
+    # Shares outstanding has no free, reliable source (Yahoo's was 40% off), so back it out
+    # on the holdings date: fund value / official NAV if we have that day's NAV, otherwise
+    # assume the ETF closed at NAV that day.
     dates = list(filled.index)
     anchor = [d for d in dates if d <= as_of][-1]
     nav_date = date_nav(nav, filled[TICKER])
@@ -144,7 +154,7 @@ def run(method: str, days: int | None = None) -> None:
 
     latest = window[-1]
     issues = check(as_of, holdings, equities, closes, filled, anchor, latest, fund_value, results)
-    if nav_date in window and shares_source != "nav":
+    if nav_date in window and shares_source != "nav":  # an independent test of our number
         log.info("iNAV vs official NAV on %s: %+.1f bp", nav_date, (results.loc[nav_date, "inav"] / nav - 1) * 1e4)
 
     row = results.loc[latest]
@@ -178,6 +188,8 @@ def check(as_of, holdings, equities, closes, filled, anchor, latest, fund_value,
     for ticker, move in moves[moves.abs() >= LARGE_MOVE_PCT].items():
         issues.append(("large_move", f"{ticker} moved {move:+.1f}% since the holdings date; possible split"))
 
+    # Independent cross-check: each stock's value / its published weight should give the
+    # same fund total. A bad or missing price shows up as a gap.
     big = equities[equities["weight_pct"] >= 0.1]
     implied_total = (big["units"] * filled.loc[anchor, big.index] / (big["weight_pct"] / 100)).median()
     gap_bp = (fund_value[anchor] / implied_total - 1) * 1e4
@@ -233,6 +245,7 @@ def save(as_of, holdings, closes, results, issues) -> None:
         upsert(conn, "results", results.assign(valuation_date=results["valuation_date"].astype(str), run_ts=run_ts))
         upsert(conn, "issues", pd.DataFrame(issues, columns=["check_name", "detail"]).assign(run_ts=run_ts))
 
+        # Plain-text copy so each day's change is visible in the git history
         pd.read_sql("SELECT * FROM results ORDER BY valuation_date, method", conn).to_csv(
             OUTPUT / "results.csv", index=False)
     conn.close()
