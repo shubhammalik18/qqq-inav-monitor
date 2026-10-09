@@ -1,7 +1,7 @@
 # QQQ iNAV
 
 Rebuilds the value of the Invesco QQQ ETF from its daily holdings and compares it with the price QQQ actually closed at. The gap is the ETF's premium or discount. 
-It runs for free on GitHub Actions every weekday after the US close and updates this page.
+The dashboard is hosted on Vercel and the Python pipeline can be run locally to refresh the underlying calculations.
 
 <!-- latest:start -->
 **As of October 8, 2026**
@@ -10,7 +10,7 @@ It runs for free on GitHub Actions every weekday after the US close and updates 
 |---|---|---|---|
 | $747.42 | $747.58 | +2.1 bp | $757.96 (2026-10-07) |
 
-![Premium / discount chart](output/chart.png)
+[Open the live QQQ iNAV dashboard](https://qqq-inav-monitor-l2u2.vercel.app)
 
 <details><summary>Top 10 holdings</summary>
 
@@ -30,7 +30,7 @@ It runs for free on GitHub Actions every weekday after the US close and updates 
 </details>
 <!-- latest:end -->
 
-Dashboard with a zoomable chart: download [`output/index.html`](output/index.html) and open it in a browser.
+**Live dashboard:** https://qqq-inav-monitor-l2u2.vercel.app
 
 ## How it works
 
@@ -43,10 +43,10 @@ Dashboard with a zoomable chart: download [`output/index.html`](output/index.htm
 ## Run it
 
 ```bash
+cd python
 pip install -r requirements.txt
 python inav.py backfill --days 60   # build some history
 python inav.py daily                # today's run
-open output/index.html
 ```
 
 ## Notes
