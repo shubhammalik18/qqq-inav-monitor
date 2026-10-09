@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__TICKER__ iNAV</title>
+<title>QQQ iNAV</title>
 <style>
   :root {
     color-scheme: light;
@@ -47,7 +47,7 @@
 <body>
 <main>
   <header>
-    <h1>__TICKER__ iNAV</h1>
+    <h1>QQQ iNAV</h1>
     <div class="meta" id="meta"></div>
   </header>
 
@@ -55,7 +55,7 @@
 
   <section class="card">
     <h2>Premium / discount (bp)</h2>
-    <p class="desc">Market close vs. value of the holdings. Above zero means __TICKER__ closed above its holdings. Shaded = backfill estimate.</p>
+    <p class="desc">Market close vs. value of the holdings. Above zero means QQQ closed above its holdings. Shaded = backfill estimate.</p>
     <div id="chart"></div>
   </section>
 
@@ -69,7 +69,7 @@
 </main>
 
 <script>
-const DATA = __DATA__;
+const DATA = {"ticker":"QQQ","alert_bp":25,"last_run":"2026-10-09 02:39:23 UTC","latest":{"valuation_date":"2026-10-08","holdings_date":"2026-10-07","inav":747.4225665815197,"market_close":747.5800170898438,"premium_bp":2.1065795356456363},"nav":{"date":"2026-10-07","value":757.96},"series":{"date":["2026-10-08"],"premium_bp":[2.11],"backfill":[false]},"holdings":[{"ticker":"NVDA","name":"NVIDIA Corp","weight_pct":8.46,"close":230.48,"move_pct":-2.94,"contrib_bp":-24.9},{"ticker":"AAPL","name":"Apple Inc","weight_pct":7.26,"close":340.42,"move_pct":1.11,"contrib_bp":8.1},{"ticker":"MSFT","name":"Microsoft Corp","weight_pct":5.81,"close":522.61,"move_pct":-1.35,"contrib_bp":-7.8},{"ticker":"MU","name":"Micron Technology Inc","weight_pct":5.01,"close":1035.84,"move_pct":-4.79,"contrib_bp":-24},{"ticker":"AMD","name":"Advanced Micro Devices Inc","weight_pct":4.3,"close":620.68,"move_pct":-3.9,"contrib_bp":-16.8},{"ticker":"AMZN","name":"Amazon.com Inc","weight_pct":4.14,"close":254.06,"move_pct":-2.25,"contrib_bp":-9.3},{"ticker":"META","name":"Meta Platforms Inc","weight_pct":3.17,"close":720.89,"move_pct":-0.06,"contrib_bp":-0.2},{"ticker":"GOOGL","name":"Alphabet Inc Class A","weight_pct":3.04,"close":348.29,"move_pct":-0.63,"contrib_bp":-1.9},{"ticker":"SPCX","name":"SpaceX","weight_pct":2.93,"close":160.57,"move_pct":-4.19,"contrib_bp":-12.3},{"ticker":"TSLA","name":"Tesla Inc","weight_pct":2.93,"close":375,"move_pct":-0.74,"contrib_bp":-2.2}]};
 
 const fmt = (v, d = 2) => v == null || Number.isNaN(v) ? "—" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const signed = (v, d = 1) => v == null || Number.isNaN(v) ? "—" : (v > 0 ? "+" : "") + fmt(v, d);
