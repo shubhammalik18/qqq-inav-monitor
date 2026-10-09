@@ -3,6 +3,7 @@
 Rebuilds the value of the Invesco QQQ ETF from its daily holdings and compares it with the price QQQ actually closed at. The gap is the ETF's premium or discount. 
 The dashboard is hosted on Vercel and the Python pipeline can be run locally to refresh the underlying calculations.
 
+
 <!-- latest:start -->
 **As of October 8, 2026**
 
@@ -10,7 +11,6 @@ The dashboard is hosted on Vercel and the Python pipeline can be run locally to 
 |---|---|---|---|
 | $747.42 | $747.58 | +2.1 bp | $757.96 (2026-10-07) |
 
-[Open the live QQQ iNAV dashboard](https://qqq-inav-monitor-l2u2.vercel.app)
 
 <details><summary>Top 10 holdings</summary>
 
